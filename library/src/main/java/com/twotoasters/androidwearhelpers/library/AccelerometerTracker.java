@@ -3,6 +3,7 @@ package com.twotoasters.androidwearhelpers.library;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
+import android.opengl.Matrix;
 
 public class AccelerometerTracker extends SensorTrackerBase {
 
@@ -15,23 +16,33 @@ public class AccelerometerTracker extends SensorTrackerBase {
     private float[] linear_acceleration;
 
     //Flick listening
-    private OnFlickListener listener;
+    private OnFlickListener onFlickListener;
     private float lastHighestAccel;
     private boolean isFlicking;
 
-    public AccelerometerTracker(Context context, OnFlickListener listener) {
+    //Sensor change listening
+    private OnAccelerationChangedListener onAccelerationChangedListener;
+
+    public AccelerometerTracker(Context context) {
         super(context, Sensor.TYPE_ACCELEROMETER);
-        this.listener = listener;
+    }
+
+    public void setOnFlickListener(OnFlickListener listener) {
+        this.onFlickListener = listener;
+    }
+
+    public void setOnAccelerationChangedListener(OnAccelerationChangedListener listener) {
+        this.onAccelerationChangedListener = listener;
     }
 
     @Override
-    public void onRegister() {
+    protected void onRegister() {
         gravity = new float[3];
         linear_acceleration = new float[3];
     }
 
     @Override
-    public void onUnregister() {
+    protected void onUnregister() {
         //no-op
     }
 
@@ -54,21 +65,26 @@ public class AccelerometerTracker extends SensorTrackerBase {
         linear_acceleration[1] = Math.abs(event.values[1] - gravity[1]);
         linear_acceleration[2] = Math.abs(event.values[2] - gravity[2]);
 
-        float highestAccel = Math.max(linear_acceleration[0], linear_acceleration[1]);
-        highestAccel = Math.max(highestAccel, linear_acceleration[2]);
+        float magnitude = Matrix.length(linear_acceleration[0], linear_acceleration[1], linear_acceleration[2]);
 
-        if (highestAccel > ACCEL_HIGH_BOUND) {
+        if (onAccelerationChangedListener != null) {
+            onAccelerationChangedListener.onAccelerationChanged(
+                    linear_acceleration[0], linear_acceleration[1], linear_acceleration[2], magnitude
+            );
+        }
+
+        if (magnitude > ACCEL_HIGH_BOUND) {
             //In mid-flick
             isFlicking = true;
-        } else if ( isFlicking && lastHighestAccel - highestAccel > FLICK_TO_NEUTRAL_DIFF) {
+        } else if ( isFlicking && lastHighestAccel - magnitude > FLICK_TO_NEUTRAL_DIFF) {
             //Ending a flick
             isFlicking = false;
-            if (listener != null) listener.onFlick();
-        } else if (highestAccel < ACCEL_LOW_BOUND) {
+            if (onFlickListener != null) onFlickListener.onFlick();
+        } else if (magnitude < ACCEL_LOW_BOUND) {
             isFlicking = false;
         }
 
-        lastHighestAccel = highestAccel;
+        lastHighestAccel = magnitude;
     }
 
     @Override
@@ -76,7 +92,21 @@ public class AccelerometerTracker extends SensorTrackerBase {
         //no-op
     }
 
+    public interface OnAccelerationChangedListener {
+        /**
+         * Called when a new acceleration value has been calculated from the sensor data in onSensorChanged.
+         * @param x Acceleration on the x-axis
+         * @param y Acceleration on the y-axis
+         * @param z Acceleration on the z-axis
+         * @param magnitude The magnitude of the acceleration vector
+         */
+        void onAccelerationChanged(float x, float y, float z, float magnitude);
+    }
+
     public interface OnFlickListener {
+        /**
+         * Called when a "flick" gesture has been recognized. A flick can occur in any direction.
+         */
         void onFlick();
     }
 }

@@ -13,11 +13,13 @@ public abstract class SensorTrackerBase implements SensorEventListener {
 
     protected boolean isRegistered;
     protected SensorManager sensorManager;
+    protected int sensorType;
     protected Sensor sensor;
 
     public SensorTrackerBase(Context context, int sensorType) {
-        sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-        sensor = sensorManager.getDefaultSensor(sensorType);
+        this.sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+        this.sensorType = sensorType;
+        this.sensor = sensorManager.getDefaultSensor(sensorType);
     }
 
     public boolean register() throws InvalidSensorTypeException {
@@ -25,7 +27,7 @@ public abstract class SensorTrackerBase implements SensorEventListener {
     }
 
     public boolean register(int pollingRate) throws InvalidSensorTypeException {
-        if (sensor == null) throw new InvalidSensorTypeException();
+        if (sensor == null) throw new InvalidSensorTypeException(sensorType);
         if (!isRegistered) {
             sensorManager.registerListener(this, sensor, pollingRate);
             isRegistered = true;
@@ -45,9 +47,17 @@ public abstract class SensorTrackerBase implements SensorEventListener {
         return false;
     }
 
-    public abstract void onRegister();
+    /**
+     * Called immediately after a listener has been registered successfully for a Sensor. Perform any
+     * post-registration logic here.
+     */
+    protected abstract void onRegister();
 
-    public abstract void onUnregister();
+    /**
+     * Called immediately after a listener has been unregistered for a Sensor. This is a good place to
+     * do some cleanup or reinitialization.
+     */
+    protected abstract void onUnregister();
 
     @Override
     public abstract void onSensorChanged(SensorEvent event);
@@ -55,6 +65,16 @@ public abstract class SensorTrackerBase implements SensorEventListener {
     @Override
     public abstract void onAccuracyChanged(Sensor sensor, int i);
 
-    public static class InvalidSensorTypeException extends Exception { }
+    /**
+     * Thrown when attempting to register a listener for a Sensor that does not exist or cannot
+     * be found.
+     */
+    public static class InvalidSensorTypeException extends Exception {
+
+        public InvalidSensorTypeException(int sensorType) {
+            super("Sensor of type " + sensorType + " was not found on this device.");
+        }
+
+    }
 
 }
