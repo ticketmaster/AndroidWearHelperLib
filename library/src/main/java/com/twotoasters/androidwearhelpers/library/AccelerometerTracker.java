@@ -15,13 +15,23 @@ public class AccelerometerTracker extends SensorTrackerBase {
     private float[] linear_acceleration;
 
     //Flick listening
-    private OnFlickListener listener;
+    private OnFlickListener onFlickListener;
     private float lastHighestAccel;
     private boolean isFlicking;
 
-    public AccelerometerTracker(Context context, OnFlickListener listener) {
+    //Sensor change listening
+    private OnSensorChangedListener onSensorChangedListener;
+
+    public AccelerometerTracker(Context context) {
         super(context, Sensor.TYPE_ACCELEROMETER);
-        this.listener = listener;
+    }
+
+    public void setOnFlickListener(OnFlickListener onFlickListener) {
+        this.onFlickListener = onFlickListener;
+    }
+
+    public void setOnSensorChangedListener(OnSensorChangedListener onSensorChangedListener) {
+        this.onSensorChangedListener = onSensorChangedListener;
     }
 
     @Override
@@ -54,6 +64,9 @@ public class AccelerometerTracker extends SensorTrackerBase {
         linear_acceleration[1] = Math.abs(event.values[1] - gravity[1]);
         linear_acceleration[2] = Math.abs(event.values[2] - gravity[2]);
 
+        if (onSensorChangedListener != null)
+            onSensorChangedListener.onSensorChanged(linear_acceleration[0], linear_acceleration[1], linear_acceleration[2]);
+
         float highestAccel = Math.max(linear_acceleration[0], linear_acceleration[1]);
         highestAccel = Math.max(highestAccel, linear_acceleration[2]);
 
@@ -63,7 +76,7 @@ public class AccelerometerTracker extends SensorTrackerBase {
         } else if ( isFlicking && lastHighestAccel - highestAccel > FLICK_TO_NEUTRAL_DIFF) {
             //Ending a flick
             isFlicking = false;
-            if (listener != null) listener.onFlick();
+            if (onFlickListener != null) onFlickListener.onFlick();
         } else if (highestAccel < ACCEL_LOW_BOUND) {
             isFlicking = false;
         }
@@ -74,6 +87,10 @@ public class AccelerometerTracker extends SensorTrackerBase {
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
         //no-op
+    }
+
+    public interface OnSensorChangedListener {
+        void onSensorChanged(float x, float y, float z);
     }
 
     public interface OnFlickListener {
