@@ -51,13 +51,13 @@ public abstract class SensorTrackerBase implements SensorEventListener {
      * Called immediately after a listener has been registered successfully for a Sensor. Perform any
      * post-registration logic here.
      */
-    public abstract void onRegister();
+    protected abstract void onRegister();
 
     /**
      * Called immediately after a listener has been unregistered for a Sensor. This is a good place to
      * do some cleanup or reinitialization.
      */
-    public abstract void onUnregister();
+    protected abstract void onUnregister();
 
     @Override
     public abstract void onSensorChanged(SensorEvent event);
