@@ -20,18 +20,18 @@ public class AccelerometerTracker extends SensorTrackerBase {
     private boolean isFlicking;
 
     //Sensor change listening
-    private OnSensorChangedListener onSensorChangedListener;
+    private OnAccelerationChangedListener onAccelerationChangedListener;
 
     public AccelerometerTracker(Context context) {
         super(context, Sensor.TYPE_ACCELEROMETER);
     }
 
-    public void setOnFlickListener(OnFlickListener onFlickListener) {
-        this.onFlickListener = onFlickListener;
+    public void setOnFlickListener(OnFlickListener listener) {
+        this.onFlickListener = listener;
     }
 
-    public void setOnSensorChangedListener(OnSensorChangedListener onSensorChangedListener) {
-        this.onSensorChangedListener = onSensorChangedListener;
+    public void setOnAccelerationChangedListener(OnAccelerationChangedListener listener) {
+        this.onAccelerationChangedListener = listener;
     }
 
     @Override
@@ -64,8 +64,11 @@ public class AccelerometerTracker extends SensorTrackerBase {
         linear_acceleration[1] = Math.abs(event.values[1] - gravity[1]);
         linear_acceleration[2] = Math.abs(event.values[2] - gravity[2]);
 
-        if (onSensorChangedListener != null)
-            onSensorChangedListener.onSensorChanged(linear_acceleration[0], linear_acceleration[1], linear_acceleration[2]);
+        if (onAccelerationChangedListener != null) {
+            onAccelerationChangedListener.onAccelerationChanged(
+                    linear_acceleration[0], linear_acceleration[1], linear_acceleration[2]
+            );
+        }
 
         float highestAccel = Math.max(linear_acceleration[0], linear_acceleration[1]);
         highestAccel = Math.max(highestAccel, linear_acceleration[2]);
@@ -89,11 +92,20 @@ public class AccelerometerTracker extends SensorTrackerBase {
         //no-op
     }
 
-    public interface OnSensorChangedListener {
-        void onSensorChanged(float x, float y, float z);
+    public interface OnAccelerationChangedListener {
+        /**
+         * Called when a new acceleration value has been calculated from the sensor data in onSensorChanged.
+         * @param x Acceleration on the x-axis
+         * @param y Acceleration on the y-axis
+         * @param z Acceleration on the z-axis
+         */
+        void onAccelerationChanged(float x, float y, float z);
     }
 
     public interface OnFlickListener {
+        /**
+         * Called when a "flick" gesture has been recognized. A flick can occur in any direction.
+         */
         void onFlick();
     }
 }
