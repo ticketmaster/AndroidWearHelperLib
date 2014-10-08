@@ -29,6 +29,7 @@ public abstract class SensorTrackerBase implements SensorEventListener {
         if (!isRegistered) {
             sensorManager.registerListener(this, sensor, pollingRate);
             isRegistered = true;
+            onRegister();
             return true;
         }
         return false;
@@ -38,10 +39,15 @@ public abstract class SensorTrackerBase implements SensorEventListener {
         if (isRegistered) {
             sensorManager.unregisterListener(this);
             isRegistered = false;
+            onUnregister();
             return true;
         }
         return false;
     }
+
+    public abstract void onRegister();
+
+    public abstract void onUnregister();
 
     @Override
     public abstract void onSensorChanged(SensorEvent event);

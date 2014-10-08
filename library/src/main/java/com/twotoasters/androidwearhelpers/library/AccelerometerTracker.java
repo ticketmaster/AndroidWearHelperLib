@@ -25,13 +25,14 @@ public class AccelerometerTracker extends SensorTrackerBase {
     }
 
     @Override
-    public boolean register(int pollingRate) throws InvalidSensorTypeException {
-        super.register(pollingRate);
-        if (isRegistered) {
-            gravity = new float[3];
-            linear_acceleration = new float[3];
-        }
-        return isRegistered;
+    public void onRegister() {
+        gravity = new float[3];
+        linear_acceleration = new float[3];
+    }
+
+    @Override
+    public void onUnregister() {
+        //no-op
     }
 
     @Override
