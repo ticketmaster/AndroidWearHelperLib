@@ -1,4 +1,4 @@
-package com.twotoasters.androidwearhelpers.library;
+package com.twotoasters.androidwearhelpers.library.sensor;
 
 import android.content.Context;
 import android.hardware.Sensor;
