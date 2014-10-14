@@ -27,10 +27,18 @@ public class AccelerometerTracker extends SensorTrackerBase {
         super(context, Sensor.TYPE_ACCELEROMETER);
     }
 
+    /**
+     * Sets a listener for receiving callbacks when the AccelerometerTracker detects a "flick" event.
+     * @param listener
+     */
     public void setOnFlickListener(OnFlickListener listener) {
         this.onFlickListener = listener;
     }
 
+    /**
+     * Sets a listener for receiving callbacks as the accelerometer detects changes in acceleration.
+     * @param listener
+     */
     public void setOnAccelerationChangedListener(OnAccelerationChangedListener listener) {
         this.onAccelerationChangedListener = listener;
     }
