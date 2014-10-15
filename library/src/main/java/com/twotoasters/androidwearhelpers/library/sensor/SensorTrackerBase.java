@@ -40,7 +40,7 @@ public abstract class SensorTrackerBase implements SensorEventListener {
      * @throws InvalidSensorTypeException if a specified Sensor types does not exist or is not present on the device
      * @throws IllegalArgumentException if no Sensor types are specified
      */
-    public boolean register() throws InvalidSensorTypeException, IllegalArgumentException {
+    public boolean register() throws InvalidSensorTypeException, IllegalArgumentException, FailedToRegisterForSensorException {
         return register(READING_RATE_TENTH_OF_SECOND);
     }
 
@@ -53,12 +53,15 @@ public abstract class SensorTrackerBase implements SensorEventListener {
      * @throws InvalidSensorTypeException if a specified Sensor types does not exist or is not present on the device
      * @throws IllegalArgumentException if no Sensor types are specified
      */
-    public boolean register(int pollingRate) throws InvalidSensorTypeException, IllegalArgumentException {
+    public boolean register(int pollingRate) throws InvalidSensorTypeException, IllegalArgumentException, FailedToRegisterForSensorException {
         if (!isRegistered) {
             if (sensors == null) throw new IllegalArgumentException("No sensor types were provided for registration!");
             for (int i = 0; i < sensors.length; i++) {
-                if (sensors[i] == null) throw new InvalidSensorTypeException(sensorTypes[i]);
-                sensorManager.registerListener(this, sensors[i], pollingRate);
+                if (sensors[i] == null) {
+                    throw new InvalidSensorTypeException(sensorTypes[i]);
+                } else if (!sensorManager.registerListener(this, sensors[i], pollingRate)) {
+                    throw new FailedToRegisterForSensorException(sensorTypes[i]);
+                }
             }
             isRegistered = true;
             onRegister();
@@ -109,6 +112,17 @@ public abstract class SensorTrackerBase implements SensorEventListener {
 
         public InvalidSensorTypeException(int sensorType) {
             super("Sensor of type " + sensorType + " was not found on this device.");
+        }
+
+    }
+
+    /**
+     * Thrown when registration fails for a Sensor.
+     */
+    public static class FailedToRegisterForSensorException extends Exception {
+
+        public FailedToRegisterForSensorException(int sensorType) {
+            super("Failed to register for Sensor of type " + sensorType);
         }
 
     }
