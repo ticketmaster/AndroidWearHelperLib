@@ -13,23 +13,35 @@ public abstract class SensorTrackerBase implements SensorEventListener {
 
     protected boolean isRegistered;
     protected SensorManager sensorManager;
-    protected int sensorType;
-    protected Sensor sensor;
+    protected int[] sensorTypes;
+    protected Sensor[] sensors;
 
     public SensorTrackerBase(Context context, int sensorType) {
         this.sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-        this.sensorType = sensorType;
-        this.sensor = sensorManager.getDefaultSensor(sensorType);
+        this.sensorTypes = new int[] {sensorType};
+        this.sensors = new Sensor[] {sensorManager.getDefaultSensor(sensorType)};
+    }
+
+    public SensorTrackerBase(Context context, int[] sensorTypes) {
+        this.sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+        this.sensorTypes = sensorTypes;
+        this.sensors = new Sensor[sensorTypes.length];
+        for (int i = 0; i < sensorTypes.length; i++) {
+            sensors[i] = sensorManager.getDefaultSensor(sensorTypes[i]);
+        }
     }
 
     public boolean register() throws InvalidSensorTypeException {
         return register(READING_RATE_TENTH_OF_SECOND);
     }
 
-    public boolean register(int pollingRate) throws InvalidSensorTypeException {
-        if (sensor == null) throw new InvalidSensorTypeException(sensorType);
+    public boolean register(int pollingRate) throws InvalidSensorTypeException, IllegalArgumentException {
         if (!isRegistered) {
-            sensorManager.registerListener(this, sensor, pollingRate);
+            if (sensors == null) throw new IllegalArgumentException("No sensor types were provided for registration!");
+            for (int i = 0; i < sensors.length; i++) {
+                if (sensors[i] == null) throw new InvalidSensorTypeException(sensorTypes[i]);
+                sensorManager.registerListener(this, sensors[i], pollingRate);
+            }
             isRegistered = true;
             onRegister();
             return true;
@@ -39,7 +51,9 @@ public abstract class SensorTrackerBase implements SensorEventListener {
 
     public boolean unregister() {
         if (isRegistered) {
-            sensorManager.unregisterListener(this);
+            for (Sensor sensor : sensors) {
+                sensorManager.unregisterListener(this, sensor);
+            }
             isRegistered = false;
             onUnregister();
             return true;
