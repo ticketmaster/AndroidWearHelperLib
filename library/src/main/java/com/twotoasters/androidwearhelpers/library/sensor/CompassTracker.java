@@ -13,17 +13,17 @@ public class CompassTracker extends SensorTrackerBase {
     private float[] orientation;
 
     //Listener for heading changes
-    private OnHeadingChangedListener listener;
+    private OnBearingChangedListener listener;
 
     public CompassTracker(Context context) {
         super(context, new int[] {Sensor.TYPE_ACCELEROMETER, Sensor.TYPE_MAGNETIC_FIELD});
     }
 
     /**
-     * Sets a listener for receiving callbacks as changes in the compass heading are detected.
+     * Sets a listener for receiving callbacks as changes in the compass bearing are detected.
      * @param listener
      */
-    public void setOnHeadingChangedListener(OnHeadingChangedListener listener) {
+    public void setOnHeadingChangedListener(OnBearingChangedListener listener) {
         this.listener = listener;
     }
 
@@ -50,7 +50,7 @@ public class CompassTracker extends SensorTrackerBase {
             if (success) {
                 SensorManager.getOrientation(R, orientation);
                 int azimuth = (int) Math.round(Math.toDegrees(orientation[0]));
-                if (listener != null) listener.onHeadingChanged(azimuth);
+                if (listener != null) listener.onBearingChanged(azimuth);
             }
         }
     }
@@ -60,11 +60,11 @@ public class CompassTracker extends SensorTrackerBase {
         //no-op
     }
 
-    public interface OnHeadingChangedListener {
+    public interface OnBearingChangedListener {
         /**
-         * Called when the compass heading changes.
-         * @param heading The heading in degrees, where 0 == magnetic north
+         * Called when the compass bearing changes.
+         * @param bearing The heading in degrees, where 0 == North, 90 == East, 180 == South, and -90 == West
          */
-        void onHeadingChanged(int heading);
+        void onBearingChanged(int bearing);
     }
 }
