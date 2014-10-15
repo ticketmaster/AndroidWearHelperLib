@@ -23,7 +23,7 @@ public class CompassTracker extends SensorTrackerBase {
      * Sets a listener for receiving callbacks as changes in the compass bearing are detected.
      * @param listener
      */
-    public void setOnHeadingChangedListener(OnBearingChangedListener listener) {
+    public void setOnBearingChangedListener(OnBearingChangedListener listener) {
         this.listener = listener;
     }
 
