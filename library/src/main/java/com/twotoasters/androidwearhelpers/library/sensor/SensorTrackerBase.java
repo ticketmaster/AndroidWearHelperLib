@@ -46,7 +46,7 @@ public abstract class SensorTrackerBase implements SensorEventListener {
 
     /**
      * Registers listeners and begins tracking data for the sensor types specified in the constructor.
-     * 
+     *
      * @param pollingRate The rate (in ms) at which Sensor events will be reported, if possible
      * @return true if registration was successful, false if any of the Sensors are invalid or the tracker
      *              is already registered
