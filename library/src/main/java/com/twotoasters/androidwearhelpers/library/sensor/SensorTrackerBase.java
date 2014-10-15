@@ -31,10 +31,28 @@ public abstract class SensorTrackerBase implements SensorEventListener {
         }
     }
 
-    public boolean register() throws InvalidSensorTypeException {
+    /**
+     * Registers listeners and begins tracking data for the sensor types specified in the constructor.
+     * This method uses the default polling rate.
+     *
+     * @return true if registration was successful, false if any of the Sensors are invalid or the tracker
+     *              is already registered
+     * @throws InvalidSensorTypeException if a specified Sensor types does not exist or is not present on the device
+     * @throws IllegalArgumentException if no Sensor types are specified
+     */
+    public boolean register() throws InvalidSensorTypeException, IllegalArgumentException {
         return register(READING_RATE_TENTH_OF_SECOND);
     }
 
+    /**
+     * Registers listeners and begins tracking data for the sensor types specified in the constructor.
+     * 
+     * @param pollingRate The rate (in ms) at which Sensor events will be reported, if possible
+     * @return true if registration was successful, false if any of the Sensors are invalid or the tracker
+     *              is already registered
+     * @throws InvalidSensorTypeException if a specified Sensor types does not exist or is not present on the device
+     * @throws IllegalArgumentException if no Sensor types are specified
+     */
     public boolean register(int pollingRate) throws InvalidSensorTypeException, IllegalArgumentException {
         if (!isRegistered) {
             if (sensors == null) throw new IllegalArgumentException("No sensor types were provided for registration!");
@@ -49,6 +67,10 @@ public abstract class SensorTrackerBase implements SensorEventListener {
         return false;
     }
 
+    /**
+     * Unregisters listeners for all registered Sensor types.
+     * @return true if all Sensors were unregistered successfully, false if not
+     */
     public boolean unregister() {
         if (isRegistered) {
             for (Sensor sensor : sensors) {
