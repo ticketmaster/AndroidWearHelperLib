@@ -39,10 +39,11 @@ public class CompassTracker extends SensorTrackerBase {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             gravity = event.values;
-        else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+        } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
             geomagnetic = event.values;
+        }
         if (gravity != null && geomagnetic != null) {
             float R[] = new float[9];
             float I[] = new float[9];
