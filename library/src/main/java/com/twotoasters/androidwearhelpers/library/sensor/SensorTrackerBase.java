@@ -13,23 +13,56 @@ public abstract class SensorTrackerBase implements SensorEventListener {
 
     protected boolean isRegistered;
     protected SensorManager sensorManager;
-    protected int sensorType;
-    protected Sensor sensor;
+    protected int[] sensorTypes;
+    protected Sensor[] sensors;
 
     public SensorTrackerBase(Context context, int sensorType) {
         this.sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-        this.sensorType = sensorType;
-        this.sensor = sensorManager.getDefaultSensor(sensorType);
+        this.sensorTypes = new int[] {sensorType};
+        this.sensors = new Sensor[] {sensorManager.getDefaultSensor(sensorType)};
     }
 
-    public boolean register() throws InvalidSensorTypeException {
+    public SensorTrackerBase(Context context, int[] sensorTypes) {
+        this.sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+        this.sensorTypes = sensorTypes;
+        this.sensors = new Sensor[sensorTypes.length];
+        for (int i = 0; i < sensorTypes.length; i++) {
+            sensors[i] = sensorManager.getDefaultSensor(sensorTypes[i]);
+        }
+    }
+
+    /**
+     * Registers listeners and begins tracking data for the sensor types specified in the constructor.
+     * This method uses the default polling rate.
+     *
+     * @return true if registration was successful, false if any of the Sensors are invalid or the tracker
+     *              is already registered
+     * @throws InvalidSensorTypeException if a specified Sensor types does not exist or is not present on the device
+     * @throws IllegalArgumentException if no Sensor types are specified
+     */
+    public boolean register() throws InvalidSensorTypeException, IllegalArgumentException, FailedToRegisterForSensorException {
         return register(READING_RATE_TENTH_OF_SECOND);
     }
 
-    public boolean register(int pollingRate) throws InvalidSensorTypeException {
-        if (sensor == null) throw new InvalidSensorTypeException(sensorType);
+    /**
+     * Registers listeners and begins tracking data for the sensor types specified in the constructor.
+     *
+     * @param pollingRate The rate (in ms) at which Sensor events will be reported, if possible
+     * @return true if registration was successful, false if any of the Sensors are invalid or the tracker
+     *              is already registered
+     * @throws InvalidSensorTypeException if a specified Sensor types does not exist or is not present on the device
+     * @throws IllegalArgumentException if no Sensor types are specified
+     */
+    public boolean register(int pollingRate) throws InvalidSensorTypeException, IllegalArgumentException, FailedToRegisterForSensorException {
         if (!isRegistered) {
-            sensorManager.registerListener(this, sensor, pollingRate);
+            if (sensors == null) throw new IllegalArgumentException("No sensor types were provided for registration!");
+            for (int i = 0; i < sensors.length; i++) {
+                if (sensors[i] == null) {
+                    throw new InvalidSensorTypeException(sensorTypes[i]);
+                } else if (!sensorManager.registerListener(this, sensors[i], pollingRate)) {
+                    throw new FailedToRegisterForSensorException(sensorTypes[i]);
+                }
+            }
             isRegistered = true;
             onRegister();
             return true;
@@ -37,9 +70,15 @@ public abstract class SensorTrackerBase implements SensorEventListener {
         return false;
     }
 
+    /**
+     * Unregisters listeners for all registered Sensor types.
+     * @return true if all Sensors were unregistered successfully, false if not
+     */
     public boolean unregister() {
         if (isRegistered) {
-            sensorManager.unregisterListener(this);
+            for (Sensor sensor : sensors) {
+                sensorManager.unregisterListener(this, sensor);
+            }
             isRegistered = false;
             onUnregister();
             return true;
@@ -73,6 +112,17 @@ public abstract class SensorTrackerBase implements SensorEventListener {
 
         public InvalidSensorTypeException(int sensorType) {
             super("Sensor of type " + sensorType + " was not found on this device.");
+        }
+
+    }
+
+    /**
+     * Thrown when registration fails for a Sensor.
+     */
+    public static class FailedToRegisterForSensorException extends Exception {
+
+        public FailedToRegisterForSensorException(int sensorType) {
+            super("Failed to register for Sensor of type " + sensorType);
         }
 
     }
